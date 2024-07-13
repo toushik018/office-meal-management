@@ -26,7 +26,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserServices = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../../utils/prisma"));
-const client_1 = require("@prisma/client");
+const AppError_1 = __importDefault(require("../../errors/AppError"));
+const http_status_1 = __importDefault(require("http-status"));
 const paginationHelper_1 = require("../../helpers/paginationHelper");
 const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password, role } = payload;
@@ -46,38 +47,66 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     }));
     return result;
 });
-const updateUser = (requester, userId, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    // Check if the requester is trying to update their own details or if they are an admin
-    if (requester.id !== userId && requester.role !== client_1.UserRole.ADMIN) {
-        throw new Error("You are not authorized to update this user");
-    }
-    const user = yield prisma_1.default.user.findUnique({
+// const updateUser = async (requester: any, userId: string, payload: Partial<UserCreateInput>) => {
+//     // Check if the requester is trying to update their own details or if they are an admin
+//     if (requester.id !== userId && requester.role !== UserRole.ADMIN) {
+//         throw new Error("You are not authorized to update this user");
+//     }
+//     const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//     });
+//     if (!user) {
+//         throw new Error("User not found");
+//     }
+//     const updatedUser = await prisma.user.update({
+//         where: { id: userId },
+//         data: payload,
+//     });
+//     return updatedUser;
+// };
+const updateUser = (userId, userData) => __awaiter(void 0, void 0, void 0, function* () {
+    const existingUserProfile = yield prisma_1.default.user.findUniqueOrThrow({
+        where: {
+            id: userId
+        }
+    });
+    const updatedUserProfile = yield prisma_1.default.user.update({
+        where: {
+            id: userId
+        },
+        data: Object.assign({}, userData)
+    });
+    return updatedUserProfile;
+});
+// const banUser = async (requester: any, userId: string) => {
+//     if (requester.role !== UserRole.ADMIN) {
+//         throw new Error("You are not authorized to ban this user");
+//     }
+//     const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//     });
+//     if (!user) {
+//         throw new Error("User not found");
+//     }
+//     const bannedUser = await prisma.user.update({
+//         where: { id: userId },
+//         data: { status: "BANNED" },
+//     });
+//     return bannedUser;
+// };
+const banUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId, status } = payload;
+    const existingUser = yield prisma_1.default.user.findUnique({
         where: { id: userId },
     });
-    if (!user) {
-        throw new Error("User not found");
+    if (!existingUser) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
     const updatedUser = yield prisma_1.default.user.update({
         where: { id: userId },
-        data: payload,
+        data: { status: status },
     });
     return updatedUser;
-});
-const banUser = (requester, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    if (requester.role !== client_1.UserRole.ADMIN) {
-        throw new Error("You are not authorized to ban this user");
-    }
-    const user = yield prisma_1.default.user.findUnique({
-        where: { id: userId },
-    });
-    if (!user) {
-        throw new Error("User not found");
-    }
-    const bannedUser = yield prisma_1.default.user.update({
-        where: { id: userId },
-        data: { status: "BANNED" },
-    });
-    return bannedUser;
 });
 const getUserById = (requester, userId) => __awaiter(void 0, void 0, void 0, function* () {
     // Users can only fetch their own details unless they are an admin
@@ -98,7 +127,7 @@ const getAllUsers = (params, options) => __awaiter(void 0, void 0, void 0, funct
     const andCondition = [];
     if (searchTerm) {
         andCondition.push({
-            OR: ["username", "email"].map(field => ({
+            OR: ["name", "email"].map(field => ({
                 [field]: {
                     contains: searchTerm,
                     mode: "insensitive"
@@ -163,58 +192,47 @@ const getAllUsers = (params, options) => __awaiter(void 0, void 0, void 0, funct
         data: result
     };
 });
-// export const updateUserStatus = async (payload: IUpdateUserStatus) => {
-//     const { userId, status } = payload;
-//     const existingUser = await prisma.user.findUnique({
-//         where: { id: userId },
-//     });
-//     if (!existingUser) {
-//         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-//     }
-//     const updatedUser = await prisma.user.update({
-//         where: { id: userId },
-//         data: { isActive: status },
-//     });
-//     return updatedUser;
-// };
-// const deleteUser = async (userId: string) => {
-//     console.log(userId);
-//     return await prisma.$transaction(async (transactionClient) => {
-//         const existingUser = await transactionClient.user.findUnique({
-//             where: { id: userId },
-//         });
-//         if (!existingUser) {
-//             throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-//         }
-//         // Delete flatShareRequests related to the flats posted by the user
-//         const userFlats = await transactionClient.flat.findMany({
-//             where: { postedBy: userId },
-//         });
-//         const flatIds = userFlats.map(flat => flat.id);
-//         if (flatIds.length > 0) {
-//             await transactionClient.flatShareRequest.deleteMany({
-//                 where: { flatId: { in: flatIds } },
-//             });
-//         }
-//         // Delete user's flatShareRequests
-//         await transactionClient.flatShareRequest.deleteMany({
-//             where: { userId: userId },
-//         });
-//         // Delete related flats
-//         await transactionClient.flat.deleteMany({
-//             where: { postedBy: userId },
-//         });
-//         // Delete the user
-//         await transactionClient.user.delete({
-//             where: { id: userId },
-//         });
-//         return { id: userId };
-//     });
-// };
+const getUserProfile = (email) => __awaiter(void 0, void 0, void 0, function* () {
+    const userProfile = yield prisma_1.default.user.findUnique({
+        where: {
+            email
+        }
+    });
+    return userProfile;
+});
+const updateUserRole = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId, newRole } = payload;
+    const existingUser = yield prisma_1.default.user.findUnique({
+        where: { id: userId },
+    });
+    if (!existingUser) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    const updatedUser = yield prisma_1.default.user.update({
+        where: { id: userId },
+        data: { role: newRole },
+    });
+    return updatedUser;
+});
+const getAdminStats = () => __awaiter(void 0, void 0, void 0, function* () {
+    const totalUsers = yield prisma_1.default.user.count();
+    const totalMeals = yield prisma_1.default.meal.count();
+    const totalOrders = yield prisma_1.default.order.count();
+    return {
+        totalUsers,
+        totalMeals,
+        totalOrders,
+        // Placeholder for recent activities, modify as needed
+        recentActivities: [],
+    };
+});
 exports.UserServices = {
     createUser,
     updateUser,
     banUser,
     getUserById,
-    getAllUsers
+    getAllUsers,
+    getUserProfile,
+    updateUserRole,
+    getAdminStats
 };

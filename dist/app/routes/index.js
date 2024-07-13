@@ -8,12 +8,14 @@ const user_route_1 = require("../modules/User/user.route");
 const auth_route_1 = require("../modules/Auth/auth.route");
 const item_route_1 = require("../modules/Item/item.route");
 const meal_route_1 = require("../modules/meal/meal.route");
+const order_route_1 = require("../modules/Order/order.route");
 const router = express_1.default.Router();
 const moduleRoutes = [
     { path: '/', route: user_route_1.userRoutes },
     { path: '/', route: auth_route_1.authRoutes },
     { path: '/', route: item_route_1.itemsRoutes },
     { path: '/', route: meal_route_1.mealRoutes },
+    { path: '/', route: order_route_1.orderRoutes },
 ];
 moduleRoutes.forEach(({ path, route }) => router.use(path, route));
 exports.default = router;

@@ -45,4 +45,49 @@ const getMealsController = catchAsync(async (req: Request & { user?: any }, res:
     });
 });
 
-export const MealControllers = { createMealController, updateMealController, deleteMealController, getMealsController };
+const scheduleMealController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const result = await MealServices.scheduleMeal(req.user, req.body);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Meal scheduled successfully",
+        data: result,
+    });
+});
+
+const getScheduledMealsController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const { date } = req.query;
+    if (!date) {
+        return res.status(400).json({
+            success: false,
+            message: "Date query parameter is required"
+        });
+    }
+    const result = await MealServices.getScheduledMeals(date as string);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Scheduled meals retrieved successfully",
+        data: result,
+    });
+});
+
+const getMealChoicesForUsersController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const result = await MealServices.getMealChoicesForUsers();
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Meal choices retrieved successfully",
+        data: result,
+    });
+});
+
+export const MealControllers = {
+    createMealController,
+    updateMealController,
+    deleteMealController,
+    getMealsController,
+    scheduleMealController,
+    getScheduledMealsController,
+    getMealChoicesForUsersController
+};

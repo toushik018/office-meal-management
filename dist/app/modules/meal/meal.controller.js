@@ -54,4 +54,46 @@ const getMealsController = (0, catchAsync_1.default)((req, res) => __awaiter(voi
         data: result,
     });
 }));
-exports.MealControllers = { createMealController, updateMealController, deleteMealController, getMealsController };
+const scheduleMealController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield meal_service_1.MealServices.scheduleMeal(req.user, req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Meal scheduled successfully",
+        data: result,
+    });
+}));
+const getScheduledMealsController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { date } = req.query;
+    if (!date) {
+        return res.status(400).json({
+            success: false,
+            message: "Date query parameter is required"
+        });
+    }
+    const result = yield meal_service_1.MealServices.getScheduledMeals(date);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Scheduled meals retrieved successfully",
+        data: result,
+    });
+}));
+const getMealChoicesForUsersController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield meal_service_1.MealServices.getMealChoicesForUsers();
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Meal choices retrieved successfully",
+        data: result,
+    });
+}));
+exports.MealControllers = {
+    createMealController,
+    updateMealController,
+    deleteMealController,
+    getMealsController,
+    scheduleMealController,
+    getScheduledMealsController,
+    getMealChoicesForUsersController
+};

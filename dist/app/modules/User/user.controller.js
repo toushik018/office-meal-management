@@ -19,6 +19,8 @@ const user_service_1 = require("./user.service");
 const http_status_1 = __importDefault(require("http-status"));
 const pick_1 = __importDefault(require("../../utils/pick"));
 const user_constant_1 = require("./user.constant");
+const client_1 = require("@prisma/client");
+const AppError_1 = __importDefault(require("../../errors/AppError"));
 const createUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserServices.createUser(req.body);
     (0, sendResponse_1.default)(res, {
@@ -38,15 +40,26 @@ const createAdmin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         data: result,
     });
 }));
+// const updateUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+//     const userId = req.params.id;
+//     const payload = req.body;
+//     const result = await UserServices.updateUser(req.user, userId, payload);
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "User updated successfully",
+//         data: result,
+//     });
+// });
 const updateUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.params.id;
-    const payload = req.body;
-    const result = yield user_service_1.UserServices.updateUser(req.user, userId, payload);
+    const userId = req.user.id;
+    const userData = req.body;
+    const result = yield user_service_1.UserServices.updateUser(userId, userData);
     (0, sendResponse_1.default)(res, {
-        statusCode: 200,
+        statusCode: http_status_1.default.OK,
         success: true,
-        message: "User updated successfully",
-        data: result,
+        message: "User profile updated successfully",
+        data: result
     });
 }));
 const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -62,15 +75,31 @@ const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     });
 }));
 const banUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.params.id;
-    const result = yield user_service_1.UserServices.banUser(req.user, userId);
+    const { userId, status } = req.body;
+    if (req.user.role !== 'ADMIN') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'You are not authorized to update user status');
+    }
+    if (!Object.values(client_1.UserStatus).includes(status)) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid status value');
+    }
+    const updatedUser = yield user_service_1.UserServices.banUser({ userId, status: status });
     (0, sendResponse_1.default)(res, {
-        statusCode: 200,
+        statusCode: http_status_1.default.OK,
         success: true,
-        message: "User banned successfully",
-        data: result,
+        message: 'User status updated successfully',
+        data: updatedUser,
     });
 }));
+// const banUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+//     const userId = req.params.id;
+//     const result = await UserServices.banUser(req.user, userId);
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "User banned successfully",
+//         data: result,
+//     });
+// });
 const getUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.params.id;
     const result = yield user_service_1.UserServices.getUserById(req.user, userId);
@@ -79,6 +108,16 @@ const getUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void
         success: true,
         message: "User retrieved successfully",
         data: result,
+    });
+}));
+const getUserProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const email = req.user.email;
+    const result = yield user_service_1.UserServices.getUserProfile(email);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "User profile retrieved successfully",
+        data: result
     });
 }));
 // const deleteUser = catchAsync(async (req: Request & { user?: any }, res: Response) => {
@@ -91,11 +130,36 @@ const getUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void
 //         data: result,
 //     });
 // });
+const updateUserRole = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId, newRole } = req.body;
+    if (req.user.role !== client_1.UserRole.ADMIN) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'You are not authorized to update user roles');
+    }
+    const updatedUser = yield user_service_1.UserServices.updateUserRole({ userId, newRole: newRole });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'User role updated successfully',
+        data: updatedUser,
+    });
+}));
+const getAdminStatsController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const stats = yield user_service_1.UserServices.getAdminStats();
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Admin statistics retrieved successfully",
+        data: stats,
+    });
+}));
 exports.userControllers = {
     createUser,
     createAdmin,
     getUserController,
     banUserController,
     updateUserController,
-    getAllUsers
+    getAllUsers,
+    getUserProfile,
+    updateUserRole,
+    getAdminStatsController
 };

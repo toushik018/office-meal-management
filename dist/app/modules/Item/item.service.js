@@ -46,6 +46,11 @@ const deleteItem = (requester, itemId) => __awaiter(void 0, void 0, void 0, func
     if (!item) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Item not found");
     }
+    // Delete related records in the mealItems table
+    yield prisma_1.default.mealItem.deleteMany({
+        where: { itemId: itemId },
+    });
+    // Delete the item itself
     yield prisma_1.default.item.delete({
         where: { id: itemId },
     });

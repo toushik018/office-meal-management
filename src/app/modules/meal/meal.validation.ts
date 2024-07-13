@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const allowedDaysSchema = z.array(z.enum(["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]));
+
 const createMealSchema = z.object({
     name: z.string(),
     date: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -16,4 +18,4 @@ const updateMealSchema = z.object({
     items: z.array(z.string()).optional(),
 });
 
-export { createMealSchema, updateMealSchema };
+export { createMealSchema, updateMealSchema, allowedDaysSchema };

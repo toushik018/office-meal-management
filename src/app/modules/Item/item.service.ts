@@ -41,6 +41,12 @@ const deleteItem = async (requester: any, itemId: string) => {
         throw new AppError(httpStatus.NOT_FOUND, "Item not found");
     }
 
+    // Delete related records in the mealItems table
+    await prisma.mealItem.deleteMany({
+        where: { itemId: itemId },
+    });
+
+    // Delete the item itself
     await prisma.item.delete({
         where: { id: itemId },
     });

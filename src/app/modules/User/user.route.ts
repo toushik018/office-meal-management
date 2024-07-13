@@ -11,8 +11,11 @@ const router = express.Router();
 
 router.get("/users", auth(UserRole.ADMIN), userControllers.getAllUsers);
 router.get("/user/:id", auth(UserRole.ADMIN), userControllers.getUserController);
-router.put("/user/update/:id", auth(UserRole.ADMIN), userControllers.updateUserController);
-router.put("/user/ban/:id", auth(UserRole.ADMIN), userControllers.banUserController);
+router.get('/me', auth(), userControllers.getUserProfile);
+router.get("/admin/stats", auth("ADMIN"), userControllers.getAdminStatsController);
+router.put("/user/update", auth(), userControllers.updateUserController);
+router.patch("/user/ban", auth(UserRole.ADMIN), userControllers.banUserController);
+router.patch('/user/update-role', auth(UserRole.ADMIN), userControllers.updateUserRole);
 router.post('/register', validateRequest(userValidationSchema.createUserSchema),
     userControllers.createUser);
 router.post("/register", validateRequest(userValidationSchema.createAdminSchema), userControllers.createAdmin);

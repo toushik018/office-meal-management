@@ -1,148 +1,103 @@
-# Office Meal Management System
+Here is the README file for setting up and starting the backend project locally:
 
-## Overview
+````markdown
+# Office Meal Management System - Backend
 
-The Office Meal Management System is a platform designed to manage office meal schedules, orders, and user management. It provides features for admins to manage meals, items, and users, while general users can view and manage their meal orders.
+## Description
 
-### Live URL
+This project is the backend service for the Office Meal Management System, built with Node.js, Express, Prisma, and TypeScript. It provides RESTful APIs for managing users, meals, orders, and schedules.
 
-The live version of the application can be accessed at [Live Demo](https://github.com/toushik018/office-meal-management).
+## Prerequisites
 
-## Features
+Before you begin, ensure you have met the following requirements:
 
-- **Authentication**
-  - JWT-based authentication
-  - Sign-in functionality
-  - Banned users cannot log in
-- **User Management (Admins Only)**
-  - Add and ban users
-  - Data table with filters (search, pagination)
-  - Update user roles and information
-- **Item Management (Admins Only)**
-  - Add, update, and delete items
-  - Items include food categories such as Protein, Starch, and Veg
-- **Meal Management (Admins Only)**
-  - Set meals for 5 days a week with constraints
-  - Schedule meals for specific days
-  - Ensure meals include required items
-- **Meal Order Management (General Users)**
-  - View weekly meal schedules
-  - Select and update meal choices for each day
-  - Schedule meals for an entire month
-  - Option to select "No Meal" for any day
-- **Meal Schedule Management (Admins Only)**
-  - View meal choices for every user
-
-## Technology Stack
-
-- **Backend:**
-  - Node.js
-  - Express.js
-  - Prisma ORM for database management
-  - JSON Web Tokens (JWT) for authentication
-  - Zod for validation
+- Node.js and npm installed. You can download them from [Node.js official website](https://nodejs.org/).
+- PostgreSQL installed and running. You can download it from [PostgreSQL official website](https://www.postgresql.org/).
 
 ## Getting Started
 
-To run this project locally, follow these steps:
+Follow these steps to set up and start the project on your local machine.
 
-1. Clone the repository:
+### 1. Clone the Repository
 
-   ```sh
-   git clone <repository-url>
-   ```
+```bash
+git clone https://github.com/your-username/office-meal-management-backend.git
+cd office-meal-management-backend
+```
+````
 
-2. Navigate to the project directory:
+### 2. Install Dependencies
 
-   ```sh
-   cd office-meal-management
-   ```
+```bash
+npm install
+```
 
-3. Install dependencies:
-
-   ```sh
-   npm install
-   ```
-
-4. Set up environment variables:
-
-   - Create a `.env` file in the root directory.
-   - Define the required environment variables (e.g., database connection details, JWT secret).
-
-5. Build the project:
-
-   ```sh
-   npm run build
-   ```
-
-6. Start the server:
-
-   ```sh
-   npm run dev
-   ```
-
-7. Access the application at `http://localhost:<PORT>` (replace `<PORT>` with the port specified in your environment variables).
-
-## Environment Variables
+### 3. Set Up Environment Variables
 
 Create a `.env` file in the root directory and add the following environment variables:
 
+```env
+DATABASE_URL="postgresql://your-username:your-password@localhost:5432/your-database-name?schema=public"
+JWT_SECRET="your-jwt-secret"
+EMAIL_HOST="your-email-host"
+EMAIL_PORT="your-email-port"
+EMAIL_USER="your-email-username"
+EMAIL_PASS="your-email-password"
 ```
-DATABASE_URL="your-database-url"
-JWT_ACCESS_SECRET="your-jwt-access-secret"
-JWT_REFRESH_SECRET="your-jwt-refresh-secret"
-JWT_EXPIRE_IN="your-jwt-expire-time"
-JWT_REFRESH_EXPIRE_IN="your-jwt-refresh-expire-time"
-PORT=your-port-number
-```
 
-## Prisma
+### 4. Set Up Prisma
 
-Ensure that Prisma is properly set up by running the following command after installing dependencies:
+Generate the Prisma client:
 
-```sh
+```bash
 npx prisma generate
 ```
 
-To apply any database migrations, run:
+Run the Prisma migrations to set up your database schema:
 
-```sh
-npx prisma migrate dev --name <migration-name>
+```bash
+npx prisma migrate dev --name init
 ```
 
-## Scripts
+### 5. Start the Development Server
 
-- `npm run dev`: Start the development server with `ts-node-dev`.
-- `npm run build`: Compile TypeScript to JavaScript.
-- `npm run postinstall`: Generate Prisma client after installing dependencies.
-- `npm test`: Run tests (currently a placeholder).
-
-## Folder Structure
-
+```bash
+npm run dev
 ```
-.
-├── prisma
-│   ├── migrations
-│   └── schema.prisma
-├── src
-│   ├── config
-│   ├── controllers
-│   ├── middlewares
-│   ├── models
-│   ├── routes
-│   ├── services
-│   ├── utils
-│   └── validation
-├── .env
-├── package.json
-└── tsconfig.json
-```
+
+The backend server should now be running on `http://localhost:5000`.
+
+## Project Structure
+
+- `src/`: Contains the source code for the project.
+  - `controllers/`: Handles the request and response logic.
+  - `middleware/`: Contains middleware functions for authentication and error handling.
+  - `models/`: Defines the Prisma schema and models.
+  - `routes/`: Defines the application routes.
+  - `services/`: Contains the business logic.
+  - `utils/`: Contains utility functions.
+- `prisma/`: Contains Prisma schema and migration files.
+
+## Available Scripts
+
+- `npm run dev`: Runs the application in development mode using `ts-node-dev`.
+- `npm run build`: Compiles the TypeScript code to JavaScript.
+- `npm run postinstall`: Runs Prisma generate command after installation.
+
+## Important Notes
+
+- Ensure your PostgreSQL database is running and accessible with the provided credentials in the `.env` file.
+- The Prisma client should be generated every time you make changes to the Prisma schema.
+- For any email-related features, ensure you have set up the email configurations correctly in the `.env` file.
 
 ## Contributing
 
+If you want to contribute to this project, follow these steps:
+
 1. Fork the repository.
 2. Create a new branch (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -m 'Add new feature'`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Open a Pull Request.
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add some feature'`).
+5. Push to the branch (`git push origin feature-branch`).
+6. Open a Pull Request.
 

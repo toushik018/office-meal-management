@@ -30,15 +30,27 @@ const createAdmin = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+// const updateUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+//     const userId = req.params.id;
+//     const payload = req.body;
+//     const result = await UserServices.updateUser(req.user, userId, payload);
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "User updated successfully",
+//         data: result,
+//     });
+// });
+
 const updateUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-    const userId = req.params.id;
-    const payload = req.body;
-    const result = await UserServices.updateUser(req.user, userId, payload);
+    const userId = req.user.id;
+    const userData = req.body;
+    const result = await UserServices.updateUser(userId, userData);
     sendResponse(res, {
-        statusCode: 200,
+        statusCode: httpStatus.OK,
         success: true,
-        message: "User updated successfully",
-        data: result,
+        message: "User profile updated successfully",
+        data: result
     });
 });
 
@@ -59,20 +71,40 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 })
 
 
-
-
-
 const banUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-    const userId = req.params.id;
+    const { userId, status } = req.body;
 
-    const result = await UserServices.banUser(req.user, userId);
+    if (req.user.role !== 'ADMIN') {
+        throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized to update user status');
+    }
+
+    if (!Object.values(UserStatus).includes(status)) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Invalid status value');
+    }
+
+    const updatedUser = await UserServices.banUser({ userId, status: status as UserStatus });
+
     sendResponse(res, {
-        statusCode: 200,
+        statusCode: httpStatus.OK,
         success: true,
-        message: "User banned successfully",
-        data: result,
+        message: 'User status updated successfully',
+        data: updatedUser,
     });
 });
+
+
+
+// const banUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+//     const userId = req.params.id;
+
+//     const result = await UserServices.banUser(req.user, userId);
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "User banned successfully",
+//         data: result,
+//     });
+// });
 
 const getUserController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
     const userId = req.params.id;
@@ -86,6 +118,16 @@ const getUserController = catchAsync(async (req: Request & { user?: any }, res: 
     });
 });
 
+const getUserProfile = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const email = req.user.email;
+    const result = await UserServices.getUserProfile(email);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User profile retrieved successfully",
+        data: result
+    })
+});
 
 // const deleteUser = catchAsync(async (req: Request & { user?: any }, res: Response) => {
 //     const { userId } = req.params;
@@ -98,7 +140,33 @@ const getUserController = catchAsync(async (req: Request & { user?: any }, res: 
 //     });
 // });
 
+const updateUserRole = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const { userId, newRole } = req.body;
 
+    if (req.user.role !== UserRole.ADMIN) {
+        throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized to update user roles');
+    }
+
+    const updatedUser = await UserServices.updateUserRole({ userId, newRole: newRole as UserRole });
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'User role updated successfully',
+        data: updatedUser,
+    });
+});
+
+
+const getAdminStatsController = catchAsync(async (req: Request, res: Response) => {
+    const stats = await UserServices.getAdminStats();
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Admin statistics retrieved successfully",
+        data: stats,
+    });
+});
 
 export const userControllers = {
     createUser,
@@ -106,6 +174,9 @@ export const userControllers = {
     getUserController,
     banUserController,
     updateUserController,
-    getAllUsers
+    getAllUsers,
+    getUserProfile,
+    updateUserRole,
+    getAdminStatsController
 
 }

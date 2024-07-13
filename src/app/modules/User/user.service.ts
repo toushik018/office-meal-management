@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import prisma from "../../utils/prisma";
-import { Prisma, UserRole, UserStatus } from "@prisma/client";
+import { Prisma, User, UserRole, UserStatus } from "@prisma/client";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { TPaginationOptions } from "../../interface/pagination";
@@ -40,49 +40,92 @@ const createUser = async (payload: UserCreateInput) => {
     return result;
 };
 
-const updateUser = async (requester: any, userId: string, payload: Partial<UserCreateInput>) => {
-    // Check if the requester is trying to update their own details or if they are an admin
-    if (requester.id !== userId && requester.role !== UserRole.ADMIN) {
-        throw new Error("You are not authorized to update this user");
-    }
+// const updateUser = async (requester: any, userId: string, payload: Partial<UserCreateInput>) => {
+//     // Check if the requester is trying to update their own details or if they are an admin
+//     if (requester.id !== userId && requester.role !== UserRole.ADMIN) {
+//         throw new Error("You are not authorized to update this user");
+//     }
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
+//     const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//     });
+
+
+//     if (!user) {
+//         throw new Error("User not found");
+//     }
+
+//     const updatedUser = await prisma.user.update({
+//         where: { id: userId },
+//         data: payload,
+//     });
+
+//     return updatedUser;
+// };
+
+
+const updateUser = async (userId: string, userData: Partial<User>): Promise<User> => {
+
+    const existingUserProfile = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userId
+        }
     });
 
 
-    if (!user) {
-        throw new Error("User not found");
+
+    const updatedUserProfile = await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            ...userData
+        }
+    });
+
+    return updatedUserProfile;
+};
+
+
+
+// const banUser = async (requester: any, userId: string) => {
+//     if (requester.role !== UserRole.ADMIN) {
+//         throw new Error("You are not authorized to ban this user");
+//     }
+
+//     const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//     });
+
+//     if (!user) {
+//         throw new Error("User not found");
+//     }
+
+//     const bannedUser = await prisma.user.update({
+//         where: { id: userId },
+//         data: { status: "BANNED" },
+//     });
+
+//     return bannedUser;
+// };
+
+const banUser = async (payload: IUpdateUserStatus) => {
+    const { userId, status } = payload;
+
+    const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+
+    if (!existingUser) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
 
     const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: payload,
+        data: { status: status },
     });
 
     return updatedUser;
-};
-
-
-const banUser = async (requester: any, userId: string) => {
-    if (requester.role !== UserRole.ADMIN) {
-        throw new Error("You are not authorized to ban this user");
-    }
-
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-
-    if (!user) {
-        throw new Error("User not found");
-    }
-
-    const bannedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { status: "BANNED" },
-    });
-
-    return bannedUser;
 };
 
 
@@ -111,7 +154,7 @@ const getAllUsers = async (params: UserInput, options: TPaginationOptions) => {
 
     if (searchTerm) {
         andCondition.push({
-            OR: ["username", "email"].map(field => ({
+            OR: ["name", "email"].map(field => ({
                 [field]: {
                     contains: searchTerm,
                     mode: "insensitive"
@@ -190,69 +233,55 @@ const getAllUsers = async (params: UserInput, options: TPaginationOptions) => {
 
 
 
-// export const updateUserStatus = async (payload: IUpdateUserStatus) => {
-//     const { userId, status } = payload;
-
-//     const existingUser = await prisma.user.findUnique({
-//         where: { id: userId },
-//     });
-
-//     if (!existingUser) {
-//         throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-//     }
-
-//     const updatedUser = await prisma.user.update({
-//         where: { id: userId },
-//         data: { isActive: status },
-//     });
-
-//     return updatedUser;
-// };
 
 
-// const deleteUser = async (userId: string) => {
-//     console.log(userId);
-//     return await prisma.$transaction(async (transactionClient) => {
-//         const existingUser = await transactionClient.user.findUnique({
-//             where: { id: userId },
-//         });
 
-//         if (!existingUser) {
-//             throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-//         }
 
-//         // Delete flatShareRequests related to the flats posted by the user
-//         const userFlats = await transactionClient.flat.findMany({
-//             where: { postedBy: userId },
-//         });
+const getUserProfile = async (email: string) => {
 
-//         const flatIds = userFlats.map(flat => flat.id);
+    const userProfile = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
 
-//         if (flatIds.length > 0) {
-//             await transactionClient.flatShareRequest.deleteMany({
-//                 where: { flatId: { in: flatIds } },
-//             });
-//         }
+    return userProfile;
+};
 
-//         // Delete user's flatShareRequests
-//         await transactionClient.flatShareRequest.deleteMany({
-//             where: { userId: userId },
-//         });
+const updateUserRole = async (payload: IUpdateUserRole) => {
+    const { userId, newRole } = payload;
 
-//         // Delete related flats
-//         await transactionClient.flat.deleteMany({
-//             where: { postedBy: userId },
-//         });
+    const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+    });
 
-//         // Delete the user
-//         await transactionClient.user.delete({
-//             where: { id: userId },
-//         });
+    if (!existingUser) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
 
-//         return { id: userId };
-//     });
-// };
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { role: newRole },
+    });
 
+    return updatedUser;
+};
+
+
+
+const getAdminStats = async () => {
+    const totalUsers = await prisma.user.count();
+    const totalMeals = await prisma.meal.count();
+    const totalOrders = await prisma.order.count();
+
+    return {
+        totalUsers,
+        totalMeals,
+        totalOrders,
+        // Placeholder for recent activities, modify as needed
+        recentActivities: [],
+    };
+};
 
 
 export const UserServices = {
@@ -260,6 +289,9 @@ export const UserServices = {
     updateUser,
     banUser,
     getUserById,
-    getAllUsers
+    getAllUsers,
+    getUserProfile,
+    updateUserRole,
+    getAdminStats
 
 }
