@@ -18,9 +18,11 @@ Follow these steps to set up and start the project on your local machine.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/office-meal-management-backend.git
-cd office-meal-management-backend
+git clone https://github.com/toushik018/office-meal-management
+cd office-meal-management
+
 ```
+
 ````
 
 ### 2. Install Dependencies
@@ -35,11 +37,16 @@ Create a `.env` file in the root directory and add the following environment var
 
 ```env
 DATABASE_URL="postgresql://your-username:your-password@localhost:5432/your-database-name?schema=public"
-JWT_SECRET="your-jwt-secret"
-EMAIL_HOST="your-email-host"
-EMAIL_PORT="your-email-port"
-EMAIL_USER="your-email-username"
-EMAIL_PASS="your-email-password"
+JWT_ACCESS_SECRET="your-jwt-secret"
+EXPIRE_IN="your-expire
+PORT=5000
+NODE_ENV=production
+JWT_ACCESS_SECRET=""
+EXPIRE_IN="1d"
+JWT_REFRESH_SECRET=""
+REFRESH_EXPIRE_IN=""
+
+
 ```
 
 ### 4. Set Up Prisma
@@ -97,4 +104,3 @@ If you want to contribute to this project, follow these steps:
 4. Commit your changes (`git commit -m 'Add some feature'`).
 5. Push to the branch (`git push origin feature-branch`).
 6. Open a Pull Request.
-
