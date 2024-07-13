@@ -1,5 +1,3 @@
-Here is the README file for setting up and starting the backend project locally:
-
 ````markdown
 # Office Meal Management System - Backend
 
